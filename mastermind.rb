@@ -2,13 +2,13 @@ class Game
   def initialize()
     @codemaker = Codemaker.new()
     @board = Board.new(@codemaker.code)
-    @guesser = Guesser.new()
+    @guesser = Guesser.new(true) #true for ai, false for player
     @game_over = false
     @turn = 1
   end
   def play_round
     puts "Turn: #{@turn}"
-    guess = @guesser.guess()
+    guess = @guesser.guess(@board.black, @board.white)
     @board.colorize(guess)
     black, white = @board.evaluate_guess(guess)
     if black == 4
@@ -30,19 +30,22 @@ class Game
   end
 end
 class Board
+  attr_reader :black, :white
   require_relative 'helper.rb'
   include Helper
   def initialize(code)
     @code = code
+    @black 
+    @white
     print_guide()
   end
   def evaluate_guess(guess)
-    black, white = 0, 0
+    @black, @white = 0, 0
     code_arr, guess_arr = to_arr(@code), to_arr(guess)
     index_to_delete = []
     for i in (code_arr.length-1).downto(0)
       if code_arr[i] == guess_arr[i]
-        black += 1
+        @black += 1
 	code_arr.delete_at(i)
 	guess_arr.delete_at(i)
       end
@@ -51,8 +54,8 @@ class Board
       i = code_arr.index(c)
       code_arr.delete_at(i) if i
     end
-    white = guess_arr.length - code_arr.length
-  return black, white 
+    @white = guess_arr.length - code_arr.length
+  return @black, @white 
   end
   def colorize(string)
     code_colored(string)
@@ -63,17 +66,28 @@ class Board
   end
 end
 class Guesser
-  def initialize()
+  require_relative 'ai.rb'
+  include Ai
+  def initialize(a)
+    @is_ai = a
   end
-  def guess()
+  def guess(black, white)
+    if @is_ai==false
+      player_guess
+    else
+      ai_guess(black, white) #Uses ai.rb file.
+    end
+  end 
+  def player_guess()
     puts "Make your guess: "
     gets.chomp
-  end  
+  end
 end
 class Codemaker
   attr_reader :code
   def initialize()
-    @code = create_code()
+    @code = 1117#create_code()
+    puts @code
   end
   def create_code() #if I want comp generated. 
     code_string = ""
